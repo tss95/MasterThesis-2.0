@@ -7,23 +7,14 @@ from sklearn.metrics import classification_report, confusion_matrix
 from keras.callbacks import ModelCheckpoint
 
 import keras
-
-#from keras.layers import Activation, Conv1D, Dense, Dropout, Flatten, MaxPooling3D, BatchNormalization, InputLayer, LSTM
-#from keras.layers import Dropout
 from keras.layers.advanced_activations import LeakyReLU
 from keras.losses import categorical_crossentropy
 from keras.models import Sequential
-#from keras.utils import Sequence
-#from keras.optimizers import Adam
 from tensorflow.keras import regularizers
 from keras.utils import np_utils
-#from keras.utils.vis_utils import plot_model
-#from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint
 from sklearn.model_selection import ParameterGrid
-#import re
-#from sklearn.metrics import confusion_matrix
-#from sklearn.preprocessing import StandardScaler
+
 
 
 
@@ -37,11 +28,17 @@ from Classes.DataProcessing.DataGenerator import DataGenerator
 from Classes.Scaling.MinMaxScalerFitter import MinMaxScalerFitter
 from Classes.Scaling.StandardScalerFitter import StandardScalerFitter
 
+import sys
+import os
+
+
 from livelossplot import PlotLossesKeras
 import random
 import pprint
 import re
 import json
+
+base_dir = 'C:\Documents\Thesis_ssd\MasterThesis-2.0'
 
 """
 Best so far:
@@ -244,7 +241,7 @@ class RandomGridSearch():
        
     
     def read_results(self):
-        text_file = f'results_{self.model_nr}.txt'
+        text_file = f'{base_dir}/GridSearchResults/{self.num_classes}_classes/results_{self.model_nr}.txt'
         dictionaries = []
         with open(text_file, 'r') as file:
             for idx, line in enumerate(file):
@@ -306,62 +303,22 @@ class RandomGridSearch():
     
     
     def save_params(self, current_params):
-        with open(f'results_{self.model_nr}.txt', 'a', newline='') as file:
+        with open(f'{base_dir}/GridSearchResults/{self.num_classes}_classes/results_{self.model_nr}.txt', 'a', newline='') as file:
             file.writelines("-------------------------------------------------------------------------------------------------------------------------------------------\n")
             for part in current_params:
                 file.writelines(str(part) + '\n')
             file.close()
             
     def save_metrics(self, metrics):
-        with open(f'results_{self.model_nr}.txt', 'a', newline='') as file:
+        with open(f'{base_dir}/GridSearchResults/{self.num_classes}_classes/results_{self.model_nr}.txt', 'a', newline='') as file:
             for part in metrics:
                 file.writelines(str(part) + '\n')
             file.close()
     
     def delete_progress(self):
-        with open(f'results_{self.model_nr}.txt', 'w+', newline='') as file:
+        with open(f'{base_dir}/GridSearchResults/{self.num_classes}_classes/results_{self.model_nr}.txt', 'w+', newline='') as file:
             file.truncate(0)
 
-    """    
-    def generate_build_model_args(self, model_nr, batch_size, dropout_rate, activation, l2_r, start_neurons, filters, kernel_size, padding):
-        _, self.channels, self.timesteps = self.get_trace_shape_no_cast(self.test_ds)
-        return {"model_nr" : model_nr,
-                "input_shape" : (batch_size, self.channels, self.timesteps),
-                "num_classes" : self.num_classes,
-                "dropout_rate" : dropout_rate,
-                "activation" : activation,
-                "l2_r" : l2_r,
-                "full_regularizer" : True,
-                "start_neurons" : start_neurons,
-                "filters" : filters,
-                "kernel_size" : kernel_size,
-                "padding" : padding}
-    
-    def generate_model_compile_args(self, opt):
-         return {"loss" : "categorical_crossentropy",
-                      "optimizer" : opt,
-                      "metrics" : ["accuracy","MSE",
-                                   tf.keras.metrics.Precision(thresholds=None, top_k=None, class_id=None, name=None, dtype=None),
-                                   tf.keras.metrics.Recall(thresholds=None, top_k=None, class_id=None, name=None, dtype=None)]}
-    def generate_gen_args(self, batch_size, test, detrend):
-        return {"batch_size" : batch_size,
-                    "shuffle" : True,
-                    "test" : test,
-                    "detrend" : detrend,
-                    "num_classes" : self.num_classes}
-    
-    def generate_fit_args(self, batch_size, test, epoch, val_gen):
-        return {"steps_per_epoch" : self.helper.get_steps_per_epoch(self.train_ds, batch_size, test),
-                        "epochs" : epoch,
-                        "validation_data" : val_gen,
-                        "validation_steps" : self.helper.get_steps_per_epoch(self.val_ds, batch_size, test),
-                        "verbose" : 1,
-                        "use_multiprocessing" : False, 
-                        "workers" : 1,
-                        "callbacks" : [PlotLossesKeras()] 
-                       }
-"""
-    
     
     
     

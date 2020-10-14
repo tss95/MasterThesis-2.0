@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------------------------------------------------------------------
+{'model_nr': 5, 'index': 0}
+{'batch_size': 16, 'epochs': 30, 'learning_rate': 0.1, 'optimizer': 'rmsprop'}
+{'activation': 'softmax', 'dropout_rate': 0.2, 'filters': 21, 'kernel_size': 9, 'l1_r': 0.3, 'l2_r': 0.01, 'output_layer_activation': 'sigmoid', 'padding': 'same', 'start_neurons': 256}

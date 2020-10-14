@@ -1,5 +1,5 @@
 from sklearn.preprocessing import StandardScaler
-from ScalerFitter import ScalerFitter
+from Scaling.ScalerFitter import ScalerFitter
 
 class StandardScalerFitter(ScalerFitter):
     

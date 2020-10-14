@@ -24,7 +24,7 @@ from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint
 from sklearn.metrics import confusion_matrix
 
-from DataGenerator import DataGenerator
+from DataProcessing.DataGenerator import DataGenerator
 from livelossplot import PlotLossesKeras
 
 import tensorflow as tf

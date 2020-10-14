@@ -25,13 +25,19 @@ from sklearn.model_selection import ParameterGrid
 #from sklearn.metrics import confusion_matrix
 #from sklearn.preprocessing import StandardScaler
 
-from DataGenerator import DataGenerator
-from Models import Models
+
+
 import tensorflow as tf
-from BaselineHelperFunctions import BaselineHelperFunctions
-from LoadData import LoadData
-from MinMaxScalerFitter import MinMaxScalerFitter
-from StandardScalerFitter import StandardScalerFitter
+
+from Modeling.Models import Models
+
+from DataProcessing.BaselineHelperFunctions import BaselineHelperFunctions
+from DataProcessing.LoadData import LoadData
+from DataProcessing.DataGenerator import DataGenerator
+
+from Scaling.MinMaxScalerFitter import MinMaxScalerFitter
+from Scaling.StandardScalerFitter import StandardScalerFitter
+
 from livelossplot import PlotLossesKeras
 import random
 import pprint

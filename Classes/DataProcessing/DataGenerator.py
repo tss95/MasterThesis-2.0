@@ -1,8 +1,8 @@
 import numpy as np
 from keras.utils import np_utils
 
-from LoadData import LoadData
-from DataHandler import DataHandler
+from DataProcessing.LoadData import LoadData
+from DataProcessing.DataHandler import DataHandler
 
 class DataGenerator(DataHandler):
     

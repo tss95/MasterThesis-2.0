@@ -12,7 +12,7 @@ import tables
 import random
 
 import tensorflow as tf
-from LoadData import LoadData
+from .LoadData import LoadData
 
 class DataHandler(LoadData):
     

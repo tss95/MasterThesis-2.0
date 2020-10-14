@@ -30,6 +30,8 @@ import datetime
 import re
 from sklearn.metrics import confusion_matrix
 from livelossplot import PlotLossesKeras
+modeling_dir = 'C:\Documents\Thesis_ssd\Master Thesis\MasterThesis-2.0\Classes\Modeling'
+os.chdir(modeling_dir)
 from CustomCallback import CustomCallback
 
 class BaselineHelperFunctions():

@@ -1,13 +1,14 @@
 import numpy as np
 from keras.utils import np_utils
+import random
 
-from DataProcessing.LoadData import LoadData
-from DataProcessing.DataHandler import DataHandler
+from .LoadData import LoadData
+from .DataHandler import DataHandler
 
 class DataGenerator(DataHandler):
     
-    def __init__(self, csv_root):
-        super().__init__(csv_root)
+    def __init__(self):
+        super().__init__()
    
    
     def data_generator(self, ds, batch_size, test = False, detrend = False, num_classes = 3, useScaler = False, scaler = None, use_highpass = False, highpass_freq = 0.49):

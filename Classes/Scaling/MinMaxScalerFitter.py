@@ -1,4 +1,4 @@
-from Scaling.ScalerFitter import ScalerFitter
+from .ScalerFitter import ScalerFitter
 from sklearn.preprocessing import MinMaxScaler
 
 class MinMaxScalerFitter(ScalerFitter):

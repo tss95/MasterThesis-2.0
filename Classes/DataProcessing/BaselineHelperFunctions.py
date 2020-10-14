@@ -30,7 +30,7 @@ import datetime
 import re
 from sklearn.metrics import confusion_matrix
 from livelossplot import PlotLossesKeras
-modeling_dir = 'C:\Documents\Thesis_ssd\Master Thesis\MasterThesis-2.0\Classes\Modeling'
+modeling_dir = 'C:\Documents\Thesis_ssd\MasterThesis-2.0\Classes\Modeling'
 os.chdir(modeling_dir)
 from CustomCallback import CustomCallback
 
@@ -157,15 +157,19 @@ class BaselineHelperFunctions():
                 "kernel_size" : kernel_size,
                 "padding" : padding}
     
-    def generate_model_compile_args(self, opt):
-         return {"loss" : "categorical_crossentropy",
+    def generate_model_compile_args(self, opt, nr_classes):
+        if nr_classes == 2:
+            loss = "binary_crossentropy"
+        else:
+            loss = "categorical_crossentropy"
+        return {"loss" : loss,
                       "optimizer" : opt,
                       "metrics" : ["accuracy",
                                    tf.keras.metrics.Precision(thresholds=None, top_k=None, class_id=None, name=None, dtype=None),
                                    tf.keras.metrics.Recall(thresholds=None, top_k=None, class_id=None, name=None, dtype=None)]}
+    
     def generate_gen_args(self, batch_size, test, detrend, useScaler = False, scaler = None, num_classes = 3):
         return {"batch_size" : batch_size,
-                    "shuffle" : True,
                     "test" : test,
                     "detrend" : detrend,
                     "useScaler" : useScaler,

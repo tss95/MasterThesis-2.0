@@ -29,14 +29,13 @@ from sklearn.model_selection import ParameterGrid
 
 import tensorflow as tf
 
-from Modeling.Models import Models
+from .Models import Models
 
-from DataProcessing.BaselineHelperFunctions import BaselineHelperFunctions
-from DataProcessing.LoadData import LoadData
-from DataProcessing.DataGenerator import DataGenerator
-
-from Scaling.MinMaxScalerFitter import MinMaxScalerFitter
-from Scaling.StandardScalerFitter import StandardScalerFitter
+from Classes.DataProcessing.LoadData import LoadData
+from Classes.DataProcessing.BaselineHelperFunctions import BaselineHelperFunctions
+from Classes.DataProcessing.DataGenerator import DataGenerator
+from Classes.Scaling.MinMaxScalerFitter import MinMaxScalerFitter
+from Classes.Scaling.StandardScalerFitter import StandardScalerFitter
 
 from livelossplot import PlotLossesKeras
 import random
@@ -121,18 +120,16 @@ class RandomGridSearch():
         self.num_classes = num_classes
         self.use_tensorboard = use_tensorboard
         self.helper = BaselineHelperFunctions()
-        self.csv_root = 'csv_folder_3_class'
-        self.full_data_csv, self.train_csv, self.val_csv, self.test_csv = LoadData(self.csv_root).getData()
-        self.data_gen = DataGenerator(self.csv_root, self.train_csv, self.val_csv, self.test_csv)
+        self.data_gen = DataGenerator()
         
 
     def fit(self):
         #num_ds, channels, timesteps = data_gen.get_trace_shape_no_cast(train_ds)
         if self.useScaler:
             if self.useMinMax:
-                self.scaler = MinMaxScalerFitter(self.train_ds).fit_scaler(shuffle = True, test = self.test, detrend = self.detrend)
+                self.scaler = MinMaxScalerFitter(self.train_ds).fit_scaler(test = self.test, detrend = self.detrend)
             else:
-                self.scaler = StandardScalerFitter(self.train_ds).fit_scaler(shuffle = True, test = self.test, detrend = self.detrend)
+                self.scaler = StandardScalerFitter(self.train_ds).fit_scaler(test = self.test, detrend = self.detrend)
         self.delete_progress()
         self.hyper_picks = self.get_n_params_from_list(list(ParameterGrid(self.hyper_grid)), self.n_picks)
         self.model_picks = self.get_n_params_from_list(list(ParameterGrid(self.model_grid)), self.n_picks)
@@ -157,14 +154,15 @@ class RandomGridSearch():
             
             build_model_args = self.helper.generate_build_model_args(self.model_nr, batch_size, dropout_rate, 
                                                                      activation, output_layer_activation,
-                                                                     l2_r, l1_r, start_neurons, filters, kernel_size, padding)
+                                                                     l2_r, l1_r, start_neurons, filters, kernel_size, 
+                                                                     padding, self.num_classes)
             model = Models(**build_model_args).model
             gen_args = self.helper.generate_gen_args(batch_size, self.test, self.detrend, useScaler = self.useScaler, scaler = self.scaler, num_classes = self.num_classes)
             train_gen = self.data_gen.data_generator(self.train_ds, **gen_args)
             val_gen = self.data_gen.data_generator(self.val_ds, **gen_args)
             test_gen = self.data_gen.data_generator(self.test_ds, **gen_args)
             
-            model_compile_args = self.helper.generate_model_compile_args(opt)
+            model_compile_args = self.helper.generate_model_compile_args(opt, self.num_classes)
             model.compile(**model_compile_args)
             
             print("Starting: ")

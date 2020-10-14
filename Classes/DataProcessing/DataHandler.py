@@ -16,9 +16,9 @@ from .LoadData import LoadData
 
 class DataHandler(LoadData):
     
-    def __init__(self, csv_root):
-        super().__init__(csv_root)
-        self.label_dict = {'explosion':0, 'earthquake':1, 'noise':2, 'induced':3}
+    def __init__(self):
+        super().__init__()
+        self.label_dict = {'earthquake':0, 'noise':1, 'explosion':2, 'induced':3}
         
     def get_trace_shape_no_cast(self, ds):
         num_ds = len(ds)

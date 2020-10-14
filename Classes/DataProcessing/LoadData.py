@@ -6,21 +6,29 @@ import h5py
 import seaborn as sns
 import os
 import csv
+import sys
+
+base_dir = 'C:\Documents\Thesis_ssd\MasterThesis-2.0'
+os.chdir(base_dir)
 
 class LoadData():
     
-    def __init__(self, csv_root, isBalanced = True):
+    def __init__(self, num_classes = 3, isBalanced = True):
         self.isBalanced = isBalanced
         self.data_path = 'data_tord_may2020'
-        self.full_data_csv = 'balanced_csv_3_class.csv'
-        self.csv_root = csv_root
+        self.csv_folder = 'csv_folder'
+        self.num_classes = num_classes
+        if self.num_classes == 3:
+            self.full_data_csv = f'{base_dir}/{self.csv_folder}/balanced_csv_3_class.csv'
+        else:
+            self.full_data_csv = f'{base_dir}/{self.csv_folder}/balanced_csv_2_class.csv'
         if isBalanced:
             self.root_sub = 'balanced'
         else:
             self.root_sub = 'raw'
-        self.train_csv = f'{self.csv_root}/{self.root_sub}/train_set.csv'
-        self.val_csv = f'{self.csv_root}/{self.root_sub}/validation_set.csv'
-        self.test_csv = f'{self.csv_root}/{self.root_sub}/test_set.csv'
+        self.train_csv = f'{base_dir}/{self.csv_folder}/{self.num_classes}_classes/{self.root_sub}/train_set.csv'
+        self.val_csv = f'{base_dir}/{self.csv_folder}/{self.num_classes}_classes/{self.root_sub}/validation_set.csv'
+        self.test_csv = f'{base_dir}/{self.csv_folder}/{self.num_classes}_classes/{self.root_sub}/test_set.csv'
     
     def getCsvs(self):
         return self.full_data_csv, self.train_csv, self.val_csv, self.test_csv

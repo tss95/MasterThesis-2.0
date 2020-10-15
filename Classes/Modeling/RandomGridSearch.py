@@ -25,6 +25,7 @@ from .Models import Models
 from Classes.DataProcessing.LoadData import LoadData
 from Classes.DataProcessing.BaselineHelperFunctions import BaselineHelperFunctions
 from Classes.DataProcessing.DataGenerator import DataGenerator
+from Classes.DataProcessing.NoiseAugmentor import NoiseAugmentor
 from Classes.Scaling.MinMaxScalerFitter import MinMaxScalerFitter
 from Classes.Scaling.StandardScalerFitter import StandardScalerFitter
 
@@ -101,16 +102,17 @@ class RandomGridSearch():
     }
     
 
-    def __init__(self, train_ds, val_ds, test_ds, model_nr, test, detrend, useScaler, useMinMax, n_picks, 
-                 hyper_grid=hyper_grid, model_grid=model_grid, num_classes = 3, use_tensorboard = False):
+    def __init__(self, train_ds, val_ds, test_ds, model_nr, test, detrend, use_scaler, use_noise_augmentor,
+                 use_minmax, n_picks, hyper_grid=hyper_grid, model_grid=model_grid, num_classes = 3, use_tensorboard = False):
         self.train_ds = train_ds
         self.val_ds = val_ds
         self.test_ds = test_ds
         self.model_nr = model_nr
         self.test = test
         self.detrend = detrend
-        self.useScaler = useScaler
-        self.useMinMax = useMinMax
+        self.use_scaler = use_scaler
+        self.use_noise_augmentor = use_noise_augmentor
+        self.use_minmax = use_minmax
         self.n_picks = n_picks
         self.hyper_grid = hyper_grid
         self.model_grid = model_grid
@@ -122,12 +124,15 @@ class RandomGridSearch():
 
     def fit(self):
         #num_ds, channels, timesteps = data_gen.get_trace_shape_no_cast(train_ds)
-        if self.useScaler:
-            if self.useMinMax:
+        if self.use_scaler:
+            if self.use_minmax:
                 self.scaler = MinMaxScalerFitter(self.train_ds).fit_scaler(test = self.test, detrend = self.detrend)
             else:
                 self.scaler = StandardScalerFitter(self.train_ds).fit_scaler(test = self.test, detrend = self.detrend)
+        if self.use_noise_augmentor:
+            self.augmentor = NoiseAugmentor(self.train_ds, self.use_scaler, self.scaler)
         self.delete_progress()
+        self.save_conditionals()
         self.hyper_picks = self.get_n_params_from_list(list(ParameterGrid(self.hyper_grid)), self.n_picks)
         self.model_picks = self.get_n_params_from_list(list(ParameterGrid(self.model_grid)), self.n_picks)
         self.results = []
@@ -154,7 +159,7 @@ class RandomGridSearch():
                                                                      l2_r, l1_r, start_neurons, filters, kernel_size, 
                                                                      padding, self.num_classes)
             model = Models(**build_model_args).model
-            gen_args = self.helper.generate_gen_args(batch_size, self.test, self.detrend, useScaler = self.useScaler, scaler = self.scaler, num_classes = self.num_classes)
+            gen_args = self.helper.generate_gen_args(batch_size, self.test, self.detrend, use_scaler = self.use_scaler, scaler = self.scaler, use_noise_augmentor = self.use_noise_augmentor, augmentor = self.augmentor, num_classes = self.num_classes)
             train_gen = self.data_gen.data_generator(self.train_ds, **gen_args)
             val_gen = self.data_gen.data_generator(self.val_ds, **gen_args)
             test_gen = self.data_gen.data_generator(self.test_ds, **gen_args)
@@ -301,6 +306,10 @@ class RandomGridSearch():
         else:
             raise Exception(f"{optimizer} not implemented into getOptimizer")
     
+    def save_conditionals(self):
+        with open(f'{base_dir}/GridSearchResults/{self.num_classes}_classes/results_{self.model_nr}.txt', 'a', newline='') as file:
+            file.writelines(f'Test_mode: {self.test}, use_scaler: {self.use_scaler}, use_minmax: {self.use_minmax}, use_noise_augmentor: {self.use_noise_augmentor} detrend: {self.detrend}. \n')
+            file.close()
     
     def save_params(self, current_params):
         with open(f'{base_dir}/GridSearchResults/{self.num_classes}_classes/results_{self.model_nr}.txt', 'a', newline='') as file:

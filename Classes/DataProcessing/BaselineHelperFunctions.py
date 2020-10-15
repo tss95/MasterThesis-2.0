@@ -146,12 +146,15 @@ class BaselineHelperFunctions():
                                    tf.keras.metrics.Precision(thresholds=None, top_k=None, class_id=None, name=None, dtype=None),
                                    tf.keras.metrics.Recall(thresholds=None, top_k=None, class_id=None, name=None, dtype=None)]}
     
-    def generate_gen_args(self, batch_size, test, detrend, useScaler = False, scaler = None, num_classes = 3):
+    def generate_gen_args(self, batch_size, test, detrend, use_scaler = False, scaler = None, 
+                          use_noise_augmentor = False, augmentor = None,  num_classes = 3):
         return {"batch_size" : batch_size,
                     "test" : test,
                     "detrend" : detrend,
-                    "useScaler" : useScaler,
+                    "use_scaler" : use_scaler,
                     "scaler" : scaler,
+                    "use_noise_augmentor" : use_noise_augmentor,
+                    "augmentor" : augmentor,
                     "num_classes" : num_classes}
     
     def generate_fit_args(self, train_ds, val_ds, batch_size, test, epoch, val_gen, use_tensorboard = False):

@@ -39,6 +39,7 @@ class ScalerFitter():
                 subsamples_X[i] = self.scaler.transform(subsamples_X[i])
             return subsamples_X, subsamples_y
         
+        
         def transform_sample(self, sample_X):
             return self.scaler.transform(sample_X)
                           

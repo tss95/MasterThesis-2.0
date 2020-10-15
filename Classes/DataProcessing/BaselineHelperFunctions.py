@@ -36,62 +36,48 @@ from CustomCallback import CustomCallback
 
 class BaselineHelperFunctions():
     
-    def plot_confusion_matrix(self, model, test_gen, test_ds, batch_size, train_ds = None, train_testing = False):
+    def plot_confusion_matrix(self, model, gen, test_ds, batch_size, num_classes, train_ds = None, train_testing = False):
         if not train_testing:
-            steps = len(test_ds)/batch_size
-            predictions = model.predict_generator(test_gen, steps)
-            predicted_classes = self.convert_to_class(predictions)[0:(len(test_ds))]
-            true_classes = self.get_class_array(test_ds, 3)
-            labels = ['explosion', 'earthquake', 'noise']
-            cm = confusion_matrix(true_classes.argmax(axis=1), predicted_classes.argmax(axis=1))
-            print(cm)
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            cax = ax.matshow(cm)
-            plt.title('Confusion matrix of the classifier')
-            fig.colorbar(cax)
-            ax.set_xticklabels([''] + labels)
-            ax.set_yticklabels([''] + labels)
-            plt.xlabel('Predicted')
-            plt.ylabel('True')
-            plt.show()
-            return
+            ds = test_ds
         else:
-            steps = len(train_ds)/batch_size
-            predictions = model.predict_generator(train_gen, steps)
-            predicted_classes = self.convert_to_class(predictions)[0:(len(train_ds))]
-            true_classes = self.get_class_array(train_ds, 3)
-            labels = ['explosion', 'earthquake', 'noise']
-            cm = confusion_matrix(true_classes.argmax(axis=1), predicted_classes.argmax(axis=1))
-            print(cm)
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            cax = ax.matshow(cm)
-            plt.title('Confusion matrix of the classifier')
-            fig.colorbar(cax)
-            ax.set_xticklabels([''] + labels)
-            ax.set_yticklabels([''] + labels)
-            plt.xlabel('Predicted')
-            plt.ylabel('True')
-            plt.show()
-            return
+            ds = train_ds
+        steps = len(ds)/batch_size
+        predictions = model.predict_generator(gen, steps)
+        predicted_classes = self.convert_to_class(predictions)[0:len(ds)]
+        true_classes = self.get_class_array(ds, num_classes)
+        labels = ['earthquake', 'noise', 'explosion']
+        labels = labels[0:num_classes]
+        cm = confusion_matrix(true_classes.argmax(axis=1), predicted_classes.argmax(axis=1))
+        print(cm)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        cax = ax.matshow(cm)
+        plt.title('Confusion matrix of the classifier')
+        fig.colorbar(cax)
+        ax.set_xticklabels([''] + labels)
+        ax.set_yticklabels([''] + labels)
+        plt.xlabel('Predicted')
+        plt.ylabel('True')
+        plt.show()
+        return
+        
         
     def get_steps_per_epoch(self, gen_set, batch_size, test):
         if test:
-            if (int(0.05*len(gen_set)/batch_size) == 0):
+            if (int(0.1*len(gen_set)/batch_size) == 0):
                 print("oof")
                 return 1
-            return int(0.05*len(gen_set)/batch_size)
+            return int(0.1*len(gen_set)/batch_size)
         return len(gen_set)/batch_size
     
     def get_class_array(self, ds, num_classes = 3):
         class_array = np.zeros((len(ds),num_classes))
         for idx, path_and_label in enumerate(ds):
-            if path_and_label[1] == "explosion":
+            if path_and_label[1] == "earthquake":
                 class_array[idx][0] = 1
-            elif path_and_label[1] == "earthquake":
-                class_array[idx][1] = 1
             elif path_and_label[1] == "noise":
+                class_array[idx][1] = 1
+            elif path_and_label[1] == "explosion":
                 class_array[idx][2] = 1
             else:
                 print(f"No class available: {path_and_label[1]}")
@@ -108,21 +94,13 @@ class BaselineHelperFunctions():
     
     def get_class_distribution_from_csv(self,data_csv):
         with open(data_csv) as file:
-            nr_earthquakes = 0
-            nr_explosions = 0
-            nr_noise = 0
-            nr_total = 0
-            for row in file:
-                event_type = row.split(',')[1].rstrip()
-                if event_type == "earthquake":
-                    nr_earthquakes += 1
-                elif event_type == "explosion":
-                    nr_explosions += 1
-                elif event_type == "noise":
-                    nr_noise += 1
-                nr_total += 1
-
-            return nr_earthquakes, nr_explosions, nr_noise, nr_total
+            classes, counts = np.unique(file[:,1], return_counts = True)
+            file.close()
+        return classes, counts
+    
+    def get_class_distribution_from_ds(self, ds):
+        classes, counts = np.unique(ds[:,1], return_counts = True)
+        return classes, counts
         
     def batch_class_distribution(self, batch):
         batch_size, nr_classes = batch[1].shape
@@ -218,3 +196,45 @@ class BaselineHelperFunctions():
 
 
         return sorted_train_ds_list[0:n]
+    
+    """
+        def plot_confusion_matrix(self, model, test_gen, test_ds, batch_size, num_classes = 3, train_ds = None, train_testing = False):
+        if not train_testing:
+            steps = len(test_ds)/batch_size
+            predictions = model.predict_generator(test_gen, steps)
+            predicted_classes = self.convert_to_class(predictions)[0:(len(test_ds))]
+            true_classes = self.get_class_array(test_ds, 3)
+            labels = ['explosion', 'earthquake', 'noise']
+            cm = confusion_matrix(true_classes.argmax(axis=1), predicted_classes.argmax(axis=1))
+            print(cm)
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            cax = ax.matshow(cm)
+            plt.title('Confusion matrix of the classifier')
+            fig.colorbar(cax)
+            ax.set_xticklabels([''] + labels)
+            ax.set_yticklabels([''] + labels)
+            plt.xlabel('Predicted')
+            plt.ylabel('True')
+            plt.show()
+            return
+        else:
+            steps = len(train_ds)/batch_size
+            predictions = model.predict_generator(train_gen, steps)
+            predicted_classes = self.convert_to_class(predictions)[0:(len(train_ds))]
+            true_classes = self.get_class_array(train_ds, 3)
+            labels = ['explosion', 'earthquake', 'noise']
+            cm = confusion_matrix(true_classes.argmax(axis=1), predicted_classes.argmax(axis=1))
+            print(cm)
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            cax = ax.matshow(cm)
+            plt.title('Confusion matrix of the classifier')
+            fig.colorbar(cax)
+            ax.set_xticklabels([''] + labels)
+            ax.set_yticklabels([''] + labels)
+            plt.xlabel('Predicted')
+            plt.ylabel('True')
+            plt.show()
+            return
+    """

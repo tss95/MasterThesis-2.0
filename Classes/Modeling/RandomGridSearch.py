@@ -192,7 +192,7 @@ class RandomGridSearch():
             current_picks.append(metrics_train)
             self.save_metrics(metrics)
             self.results.append(current_picks)
-        highest_test_accuracy_index, highest_train_accuracy_index, highest_test_precision_index, highest_train_recall_index = self.find_best_performers(self.results)
+        highest_test_accuracy_index, highest_train_accuracy_index, highest_test_precision_index, highest_test_recall_index = self.find_best_performers(self.results)
         return self.results, highest_test_accuracy_index, highest_train_accuracy_index, highest_test_precision_index, highest_test_recall_index
 
     def find_best_performers(self, results):

@@ -13,8 +13,8 @@ class DataGenerator(DataHandler):
    
    
     def data_generator(self, ds, batch_size, test = False, detrend = False, num_classes = 3, 
-                       use_scaler = False, scaler = None, use_highpass = False, highpass_freq = 0.49,
-                       use_noise_augmentor = False, augmentor = None):
+                       use_scaler = False, scaler = None, use_noise_augmentor = False, augmentor = None,
+                       use_highpass = False, highpass_freq = 0.49):
         
         num_samples, channels, timesteps = self.get_trace_shape_no_cast(ds)
         num_samples = len(ds)
@@ -46,6 +46,8 @@ class DataGenerator(DataHandler):
         batch_trace, batch_label = self.batch_to_trace(batch_samples)
         if use_scaler:
             batch_trace = self.transform_batch(scaler, batch_trace)
+        if use_noise_augmentor:
+            batch_trace = augmentor.batch_augment_noise(batch_trace, 0, augmentor.noise_std/10)
         if detrend or use_highpass:
             batch_trace = self.detrend_highpass_batch_trace(batch_trace, detrend, use_highpass, highpass_freq)
         return batch_trace, batch_label

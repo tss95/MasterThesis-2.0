@@ -146,11 +146,11 @@ class BaselineHelperFunctions():
                                    tf.keras.metrics.Precision(thresholds=None, top_k=None, class_id=None, name=None, dtype=None),
                                    tf.keras.metrics.Recall(thresholds=None, top_k=None, class_id=None, name=None, dtype=None)]}
     
-    def generate_gen_args(self, batch_size, test, detrend, useScaler = False, scaler = None, num_classes = 3):
+    def generate_gen_args(self, batch_size, test, detrend, use_scaler = False, scaler = None, num_classes = 3):
         return {"batch_size" : batch_size,
                     "test" : test,
                     "detrend" : detrend,
-                    "useScaler" : useScaler,
+                    "use_scaler" : use_scaler,
                     "scaler" : scaler,
                     "num_classes" : num_classes}
     

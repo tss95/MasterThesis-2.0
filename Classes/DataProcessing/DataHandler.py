@@ -37,10 +37,17 @@ class DataHandler(LoadData):
     def batch_to_trace(self, batch):
         path_array = batch[:,0]
         batch_trace = np.empty((len(batch), 3, 6001))
-        batch_info = np.empty((len(batch),1))
+        batch_info = []
         for idx, path in enumerate(path_array):
-            batch_trace[idx], batch_info[idx] = self.path_to_trace(path)
-        return batch_trace, batch_info
+            batch_trace[idx] = self.path_to_trace(path)[0]
+            batch_info.append(self.label_dict.get(batch[idx][1]))
+        return batch_trace, np.array(batch_info)
+    
+    def transform_batch(self, scaler, batch_X):
+        transformed_X = batch_X
+        for i in range(len(batch_X)):
+            transformed_X[i] = scaler.transform(batch_X[i])
+        return transformed_X
     
     def detrend_highpass_batch_trace(self, batch_trace, detrend, use_highpass, highpass_freq = 0.1):
         output = batch_trace
@@ -51,12 +58,12 @@ class DataHandler(LoadData):
             stream = Stream([trace_BHE, trace_BHN, trace_BHZ])
             if detrend:
                 stream.detrend('demean')
-            if use_highpass
+            if use_highpass:
                 stream.taper(max_percentage=0.05, type='cosine')
                 stream.filter('highpass', freq = highpass_freq)
             output[idx] = np.array(stream)
         return output
-    
+                      
     def convert_to_tensor(self, value, dtype_hint = None, name = None):
         tensor = tf.convert_to_tensor(value, dtype_hint, name)
         return tensor

@@ -194,47 +194,4 @@ class BaselineHelperFunctions():
 
         sorted_train_ds_list = sorted(train_ds_list, key=lambda x: x[2], reverse = True)
 
-
         return sorted_train_ds_list[0:n]
-    
-    """
-        def plot_confusion_matrix(self, model, test_gen, test_ds, batch_size, num_classes = 3, train_ds = None, train_testing = False):
-        if not train_testing:
-            steps = len(test_ds)/batch_size
-            predictions = model.predict_generator(test_gen, steps)
-            predicted_classes = self.convert_to_class(predictions)[0:(len(test_ds))]
-            true_classes = self.get_class_array(test_ds, 3)
-            labels = ['explosion', 'earthquake', 'noise']
-            cm = confusion_matrix(true_classes.argmax(axis=1), predicted_classes.argmax(axis=1))
-            print(cm)
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            cax = ax.matshow(cm)
-            plt.title('Confusion matrix of the classifier')
-            fig.colorbar(cax)
-            ax.set_xticklabels([''] + labels)
-            ax.set_yticklabels([''] + labels)
-            plt.xlabel('Predicted')
-            plt.ylabel('True')
-            plt.show()
-            return
-        else:
-            steps = len(train_ds)/batch_size
-            predictions = model.predict_generator(train_gen, steps)
-            predicted_classes = self.convert_to_class(predictions)[0:(len(train_ds))]
-            true_classes = self.get_class_array(train_ds, 3)
-            labels = ['explosion', 'earthquake', 'noise']
-            cm = confusion_matrix(true_classes.argmax(axis=1), predicted_classes.argmax(axis=1))
-            print(cm)
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            cax = ax.matshow(cm)
-            plt.title('Confusion matrix of the classifier')
-            fig.colorbar(cax)
-            ax.set_xticklabels([''] + labels)
-            ax.set_yticklabels([''] + labels)
-            plt.xlabel('Predicted')
-            plt.ylabel('True')
-            plt.show()
-            return
-    """

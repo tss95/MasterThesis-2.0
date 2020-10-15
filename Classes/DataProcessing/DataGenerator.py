@@ -4,6 +4,7 @@ import random
 
 from .LoadData import LoadData
 from .DataHandler import DataHandler
+from .DataAugmentor import DataAugmentor
 
 class DataGenerator(DataHandler):
     

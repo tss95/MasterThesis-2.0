@@ -82,6 +82,8 @@ Best so far:
   'train_recall': 0.87465983629226685}
   """
 
+#TODO: Implement highpass filter into this class.
+#TODO: CLEAN UP THIS MESS
 class RandomGridSearch():
     hyper_grid = {
             "batch_size" : [8, 16, 32, 64, 128, 256],
@@ -103,7 +105,8 @@ class RandomGridSearch():
     
 
     def __init__(self, train_ds, val_ds, test_ds, model_nr, test, detrend, use_scaler, use_noise_augmentor,
-                 use_minmax, n_picks, hyper_grid=hyper_grid, model_grid=model_grid, num_classes = 3, use_tensorboard = False):
+                 use_minmax, n_picks, hyper_grid=hyper_grid, model_grid=model_grid, num_classes = 3, 
+                 use_tensorboard = False, use_liveplots = True):
         self.train_ds = train_ds
         self.val_ds = val_ds
         self.test_ds = test_ds
@@ -118,6 +121,7 @@ class RandomGridSearch():
         self.model_grid = model_grid
         self.num_classes = num_classes
         self.use_tensorboard = use_tensorboard
+        self.use_liveplots = use_liveplots
         self.helper = BaselineHelperFunctions()
         self.data_gen = DataGenerator()
         
@@ -175,7 +179,8 @@ class RandomGridSearch():
             
 
             fit_args = self.helper.generate_fit_args(self.train_ds, self.val_ds, batch_size, self.test, 
-                                                     epoch, val_gen, use_tensorboard = self.use_tensorboard)
+                                                     epoch, val_gen, use_tensorboard = self.use_tensorboard, 
+                                                     use_liveplots = self.use_liveplots)
             
             model_fit = model.fit(train_gen, **fit_args)
             loss, accuracy, precision, recall = model.evaluate_generator(
@@ -250,6 +255,8 @@ class RandomGridSearch():
         dictionaries = []
         with open(text_file, 'r') as file:
             for idx, line in enumerate(file):
+                if idx == 0:
+                    continue
                 line = re.sub("\'", "\"", line.rstrip())
                 if idx % 6 != 0: 
                     dictionaries.append(json.loads(line))

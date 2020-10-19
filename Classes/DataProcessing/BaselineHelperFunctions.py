@@ -157,8 +157,10 @@ class BaselineHelperFunctions():
                     "augmentor" : augmentor,
                     "num_classes" : num_classes}
     
-    def generate_fit_args(self, train_ds, val_ds, batch_size, test, epoch, val_gen, use_tensorboard = False):
-        callbacks = [PlotLossesKeras()]
+    def generate_fit_args(self, train_ds, val_ds, batch_size, test, epoch, val_gen, use_tensorboard, use_liveplots):
+        callbacks = None
+        if use_liveplots:
+            callbacks = [PlotLossesKeras()]
         if use_tensorboard:
             log_dir = "tensorboard_dir/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)

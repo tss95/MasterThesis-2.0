@@ -1,0 +1,11 @@
+Test_mode: False, use_scaler: True, use_minmax: False, use_noise_augmentor: True detrend: False. 
+-------------------------------------------------------------------------------------------------------------------------------------------
+{'model_nr': 8, 'index': 0}
+{'batch_size': 32, 'epochs': 35, 'learning_rate': 0.1, 'optimizer': 'rmsprop'}
+{'activation': 'sigmoid', 'dropout_rate': 0.4, 'filters': 25, 'kernel_size': 9, 'l1_r': 0.1, 'l2_r': 0.0001, 'output_layer_activation': 'sigmoid', 'padding': 'same', 'start_neurons': 64}
+{'test_loss': 3326.009521484375, 'test_accuracy': 0.31891027092933655, 'test_precision': 0.3333333432674408, 'test_recall': 1.0}
+{'train_loss': 3326.010986328125, 'train_accuracy': 0.343137264251709, 'train_precision': 0.3333333432674408, 'train_recall': 1.0}
+-------------------------------------------------------------------------------------------------------------------------------------------
+{'model_nr': 8, 'index': 1}
+{'batch_size': 64, 'epochs': 30, 'learning_rate': 0.0001, 'optimizer': 'adam'}
+{'activation': 'softmax', 'dropout_rate': 0.1, 'filters': 11, 'kernel_size': 7, 'l1_r': 0.1, 'l2_r': 0.1, 'output_layer_activation': 'softmax', 'padding': 'same', 'start_neurons': 512}

@@ -21,10 +21,12 @@ from keras.models import Sequential
 from keras.utils import Sequence
 from keras.optimizers import Adam
 from tensorflow.keras import regularizers
+
 from keras.utils import np_utils
 from keras.utils.vis_utils import plot_model
 from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint
+from keras.callbacks import EarlyStopping
 import tensorflow as tf
 import datetime
 import re
@@ -157,14 +159,24 @@ class BaselineHelperFunctions():
                     "augmentor" : augmentor,
                     "num_classes" : num_classes}
     
-    def generate_fit_args(self, train_ds, val_ds, batch_size, test, epoch, val_gen, use_tensorboard, use_liveplots):
-        callbacks = None
+    def generate_fit_args(self, train_ds, val_ds, batch_size, test, epoch, val_gen, use_tensorboard, use_liveplots, use_custom_callback, use_early_stopping):
+        callbacks = []
         if use_liveplots:
-            callbacks = [PlotLossesKeras()]
+            callbacks.append(PlotLossesKeras())
         if use_tensorboard:
             log_dir = "tensorboard_dir/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
-            callbacks = [tensorboard_callback]
+            callbacks.append(tensorboard_callback)
+        if use_custom_callback:
+            custom_callback = CustomCallback(data_gen)
+            callbacks.append(custom_callback)
+        if use_early_stopping:
+            earlystop = EarlyStopping(monitor = 'val_loss',
+                          min_delta = 0,
+                          patience = 3,
+                          verbose = 1,
+                          restore_best_weights = True)
+            callbacks.append(earlystop)
         
         return {"steps_per_epoch" : self.get_steps_per_epoch(train_ds, batch_size, test),
                         "epochs" : epoch,

@@ -18,7 +18,8 @@ class CustomCallback(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         keys = list(logs.keys())
-
+        self.full_training_logs = []
+        
     def on_test_begin(self, logs=None):
         keys = list(logs.keys())
 

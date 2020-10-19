@@ -106,7 +106,7 @@ class RandomGridSearch():
 
     def __init__(self, train_ds, val_ds, test_ds, model_nr, test, detrend, use_scaler, use_noise_augmentor,
                  use_minmax, n_picks, hyper_grid=hyper_grid, model_grid=model_grid, num_classes = 3, 
-                 use_tensorboard = False, use_liveplots = True):
+                 use_tensorboard = False, use_liveplots = True, use_custom_callback = False, use_early_stopping = False):
         self.train_ds = train_ds
         self.val_ds = val_ds
         self.test_ds = test_ds
@@ -122,6 +122,8 @@ class RandomGridSearch():
         self.num_classes = num_classes
         self.use_tensorboard = use_tensorboard
         self.use_liveplots = use_liveplots
+        self.use_custom_callback = use_custom_callback
+        self.use_early_stopping = use_early_stopping
         self.helper = BaselineHelperFunctions()
         self.data_gen = DataGenerator()
         
@@ -164,6 +166,7 @@ class RandomGridSearch():
                                                                      padding, self.num_classes)
             model = Models(**build_model_args).model
             gen_args = self.helper.generate_gen_args(batch_size, self.test, self.detrend, use_scaler = self.use_scaler, scaler = self.scaler, use_noise_augmentor = self.use_noise_augmentor, augmentor = self.augmentor, num_classes = self.num_classes)
+            
             train_gen = self.data_gen.data_generator(self.train_ds, **gen_args)
             val_gen = self.data_gen.data_generator(self.val_ds, **gen_args)
             test_gen = self.data_gen.data_generator(self.test_ds, **gen_args)
@@ -180,20 +183,25 @@ class RandomGridSearch():
 
             fit_args = self.helper.generate_fit_args(self.train_ds, self.val_ds, batch_size, self.test, 
                                                      epoch, val_gen, use_tensorboard = self.use_tensorboard, 
-                                                     use_liveplots = self.use_liveplots)
-            
+                                                     use_liveplots = self.use_liveplots, 
+                                                     use_custom_callback = self.use_custom_callback,
+                                                     use_early_stopping = self.use_early_stopping)
             model_fit = model.fit(train_gen, **fit_args)
-            loss, accuracy, precision, recall = model.evaluate_generator(
-                generator=test_gen, steps=self.helper.get_steps_per_epoch(self.test_ds, batch_size, False))
+            
+            loss, accuracy, precision, recall = model.evaluate_generator(generator=test_gen,
+                                                                         steps=self.helper.get_steps_per_epoch(self.test_ds, 
+                                                                                                               batch_size, False))
             metrics = []
-            metrics_test = {"test_loss" : loss,
-                            "test_accuracy" : accuracy,
-                            "test_precision": precision,
-                            "test_recall" : recall}
+            metrics_test = {"val_loss" : loss,
+                            "val_accuracy" : accuracy,
+                            "val_precision": precision,
+                            "val_recall" : recall}
             metrics.append(metrics_test)
             current_picks.append(metrics_test)
-            train_loss, train_accuracy, train_precision, train_recall = model.evaluate_generator(
-                generator=train_gen, steps=self.helper.get_steps_per_epoch(self.train_ds, batch_size, True))
+            train_loss, train_accuracy, train_precision, train_recall = model.evaluate_generator(generator=train_gen,
+                                                                                        steps=self.helper.get_steps_per_epoch(self.train_ds,
+                                                                                                                              batch_size,
+                                                                                                                              True))
             metrics_train = {"train_loss" : train_loss,
                              "train_accuracy" : train_accuracy,
                              "train_precision": train_precision,
@@ -202,6 +210,7 @@ class RandomGridSearch():
             current_picks.append(metrics_train)
             self.save_metrics(metrics)
             self.results.append(current_picks)
+            
         highest_test_accuracy_index, highest_train_accuracy_index, highest_test_precision_index, highest_test_recall_index = self.find_best_performers(self.results)
         return self.results, highest_test_accuracy_index, highest_train_accuracy_index, highest_test_precision_index, highest_test_recall_index
 

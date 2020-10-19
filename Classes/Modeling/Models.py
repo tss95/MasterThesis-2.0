@@ -82,6 +82,8 @@ class Models():
             self.create_model_6()
         if self.model_nr == 7:
             self.create_model_7()
+        if self.model_nr == 8:
+            self.create_model_8()
         self.model.summary()
         
     def weight_variable(self, shape, w=0.1):
@@ -256,6 +258,34 @@ class Models():
         self.model.add(Dropout(self.dropout_rate))
         self.model.add(BatchNormalization())
         self.model.add(LSTM(self.start_neurons//2, activation = self.activation,
+                       kernel_regularizer = regularizers.l1_l2(l1=self.l1_r, l2=self.l2_r), 
+                       bias_regularizer = regularizers.l2(self.l2_r),
+                       activity_regularizer = regularizers.l2(self.l2_r*0.1)))
+        self.model.add(Dropout(self.dropout_rate))
+        self.model.add(BatchNormalization())
+        self.model.add(Flatten())
+        self.model.add(Dense(self.num_classes, activation=self.output_layer_activation))
+        return self.model
+    
+    
+    def create_model_8(self):
+        self.model = Sequential()
+        self.model.add(InputLayer(batch_input_shape = self.input_shape))
+        self.model.add(LSTM(self.start_neurons, activation = self.activation,
+                       return_sequences = True,
+                       kernel_regularizer = regularizers.l1_l2(l1=self.l1_r, l2=self.l2_r), 
+                       bias_regularizer = regularizers.l2(self.l2_r),
+                       activity_regularizer = regularizers.l2(self.l2_r*0.1)))
+        self.model.add(Dropout(self.dropout_rate))
+        self.model.add(BatchNormalization())
+        self.model.add(LSTM(self.start_neurons//2, activation = self.activation,
+                       return_sequences = True,
+                       kernel_regularizer = regularizers.l1_l2(l1=self.l1_r, l2=self.l2_r), 
+                       bias_regularizer = regularizers.l2(self.l2_r),
+                       activity_regularizer = regularizers.l2(self.l2_r*0.1)))
+        self.model.add(Dropout(self.dropout_rate))
+        self.model.add(BatchNormalization())
+        self.model.add(Dense(self.start_neurons//4, activation = self.activation,
                        kernel_regularizer = regularizers.l1_l2(l1=self.l1_r, l2=self.l2_r), 
                        bias_regularizer = regularizers.l2(self.l2_r),
                        activity_regularizer = regularizers.l2(self.l2_r*0.1)))

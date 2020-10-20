@@ -183,8 +183,8 @@ class RandomGridSearch():
         nr_fillers = len(results_df.columns) - len(picks)
         for i in range(nr_fillers):
             picks.append(np.nan)
-        temp_df = pd.DataFrame(picks, columns = results_df.columns)
-        results_df.append(temp_df, columns = results_df.columns, ingore_index = True)
+        temp_df = pd.DataFrame(np.array(picks).reshape(1,21), columns = results_df.columns)
+        results_df.append(temp_df)
         self.save_results_df(results_df, file_name)
         return results_df
 

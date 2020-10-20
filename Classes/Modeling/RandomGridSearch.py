@@ -264,11 +264,13 @@ class RandomGridSearch():
         dictionaries = []
         with open(text_file, 'r') as file:
             for idx, line in enumerate(file):
-                if idx == 0:
+                if idx == 0 or idx == 1:
                     continue
                 line = re.sub("\'", "\"", line.rstrip())
-                if idx % 6 != 0: 
+                if idx + 2 % 5 != 0: 
+                    print(line)
                     dictionaries.append(json.loads(line))
+            file.close()
         dictionaries_by_model = []
         one_model = []
         for idx, dictionary in enumerate(dictionaries):

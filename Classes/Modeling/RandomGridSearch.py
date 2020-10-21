@@ -153,7 +153,6 @@ class RandomGridSearch(GridSearchResultProcessor):
         
         self.hyper_picks = self.get_n_params_from_list(list(ParameterGrid(self.hyper_grid)), self.n_picks)
         self.model_picks = self.get_n_params_from_list(list(ParameterGrid(self.model_grid)), self.n_picks)
-        self.results = []
         pp = pprint.PrettyPrinter(indent=4)
         for i in range(self.n_picks):
             model_info = {"model_nr" : self.model_nr, "index" : i}
@@ -236,54 +235,25 @@ class RandomGridSearch(GridSearchResultProcessor):
             metrics.append(metrics_train)
             current_picks.append(metrics_train)
             self.results_df = self.store_metrics_after_fit(metrics, self.results_df, self.results_file_name)
-            self.results.append(current_picks)
             
-        highest_test_accuracy_index, highest_train_accuracy_index, highest_test_precision_index, highest_test_recall_index = self.find_best_performers(self.results)
-        return self.results, highest_test_accuracy_index, highest_train_accuracy_index, highest_test_precision_index, highest_test_recall_index
+        min_loss, max_accuracy, max_precision, max_recall = self.find_best_performers(self.results)
+        self.print_best_performers(min_loss, max_accuracy, max_precision, max_recall)
+        return self.results_df, min_loss, max_accuracy, max_precision, max_recall
 
-    def find_best_performers(self, results):
-        highest_test_accuracy = 0
-        highest_test_accuracy_index = 0
-        highest_train_accuracy = 0
-        highest_train_accuracy_index = 0
-        highest_test_precision = 0
-        highest_test_precision_index = 0
-        highest_train_precision = 0
-        highest_train_precision_index = 0
-        highest_test_recall = 0
-        highest_test_recall_index = 0
-        highest_train_recall = 0
-        highest_train_recall_index = 0
-        for idx, result in enumerate(results):
-            if result[3]["val_accuracy"] > highest_test_accuracy:
-                highest_test_accuracy = result[3]["val_accuracy"]
-                highest_test_accuracy_index = idx
-            if result[4]["train_accuracy"] > highest_train_accuracy:
-                highest_train_accuracy = result[4]["train_accuracy"]
-                highest_train_accuracy_index = idx
-            if result[3]["val_precision"] > highest_test_precision:
-                highest_test_precision = result[3]["val_precision"]
-                highest_test_precision_index = idx
-            if result[4]["train_precision"] > highest_train_precision:
-                highest_train_precision = result[4]["train_precision"]
-                highest_train_precision_index = idx
-            if result[3]["val_recall"] > highest_test_recall:
-                highest_test_recall = result[3]["val_recall"]
-                highest_test_recall_index = idx
-            if result[4]["train_recall"] > highest_train_recall:
-                highest_train_recall = result[4]["train_recall"]
-                highest_train_recall_index = idx
+    def print_best_performers(self, min_loss, max_accuracy, max_precision, max_recall):
+        print("----------------------------------------------------LOSS----------------------------------------------------------")
+        print(f'Min val loss: {min_loss['val_loss']}, at index: {min_loss['val_index']}')
+        print(f'Min training loss: {min_loss['train_loss']}, at index: {min_loss['train_index']}')
         print("----------------------------------------------------ACCURACY------------------------------------------------------")
-        print(f'Highest val accuracy: {highest_test_accuracy}, at index: {highest_test_accuracy_index}')
-        print(f'Highest training accuracy: {highest_train_accuracy}, at index: {highest_train_accuracy_index}')
+        print(f'Highest val accuracy: {max_accuracy['val_accuracy']}, at index: {max_accuracy['val_index']}')
+        print(f'Highest training accuracy: {max_accuracy['train_accuracy']}, at index: {max_accuracy['train_index']}')
         print("----------------------------------------------------PRECISION-----------------------------------------------------")
-        print(f'Highest val precision: {highest_test_precision}, at index: {highest_test_precision_index}')
-        print(f'Highest training precision: {highest_train_precision}, at index: {highest_train_precision_index}') 
+        print(f'Highest val precision: {max_precision['val_precision']}, at index: {max_precision['val_index']}')
+        print(f'Highest training precision: {max_precision['train_precision']}, at index: {max_precision['train_index']}') 
         print("-----------------------------------------------------RECALL-------------------------------------------------------")
-        print(f'Highest val recall: {highest_test_recall}, at index: {highest_test_recall_index}')
-        print(f'Highest training recall: {highest_train_recall}, at index: {highest_train_recall_index}')
+        print(f'Highest val recall: {max_recall['val_recall']}, at index: {max_recall['val_index']}')
+        print(f'Highest training recall: {max_recall['train_recall']}, at index: {max_recall['train_index']}')
         print("------------------------------------------------------------------------------------------------------------------")
-        return highest_test_accuracy_index, highest_train_accuracy_index, highest_test_precision_index, highest_test_recall_index
        
     
     def fit_from_result(self, dictionaries, index, train_channels = 3, timesteps = 6001, test = False, use_tensorboard = False):

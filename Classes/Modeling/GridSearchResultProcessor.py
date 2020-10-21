@@ -94,3 +94,25 @@ class GridSearchResultProcessor():
                 results_df.iloc[-1, results_df.columns.get_loc(column)] = metrics_val[column]
         self.save_results_df(results_df, file_name)
         return results_df
+    
+    def find_best_performers(results_df):
+        train_loss_index = results_df.columns.get_loc('train_loss')
+        metrics = results_df[results_df.columns[train_loss_index:]]
+        min_loss = {'train_loss' : min(metrics['train_loss']), 'val_loss' : min(metrics['val_loss']), 
+                    'train_index' : metrics_df[metrics_df['train_loss'] == min(metrics_df['train_loss'])].index[0], 
+                    'val_index' : metrics_df[metrics_df['val_loss'] == min(metrics_df['val_loss'])].index[0]}
+
+        max_accuracy = {'train_accuracy' : max(metrics['train_accuracy']), 'val_accuracy' : max(metrics['val_accuracy']), 
+                        'train_index' : metrics_df[metrics_df['train_accuracy'] == max(metrics_df['train_accuracy'])].index[0], 
+                        'val_index' : metrics_df[metrics_df['val_accuracy'] == max(metrics_df['val_accuracy'])].index[0]}
+
+        max_precision = {'train_precision' : max(metrics['train_precision']), 'val_precision' : max(metrics['val_precision']), 
+                         'train_index' : metrics_df[metrics_df['train_precision'] == max(metrics_df['train_precision'])].index[0], 
+                         'val_index' : metrics_df[metrics_df['val_precision'] == max(metrics_df['val_precision'])].index[0]}
+
+        max_recall = {'train_recall' : max(metrics['train_recall']), 'val_recall' : max(metrics['train_recall']), 
+                      'train_index' : metrics_df[metrics_df['train_recall'] == max(metrics_df['train_recall'])].index[0], 
+                      'val_index' : metrics_df[metrics_df['val_recall'] == max(metrics_df['val_recall'])].index[0]}
+
+        return min_loss, max_accuracy, max_precision, max_recall
+    

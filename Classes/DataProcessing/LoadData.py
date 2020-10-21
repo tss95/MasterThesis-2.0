@@ -8,7 +8,7 @@ import os
 import csv
 import sys
 
-base_dir = 'C:\Documents\Thesis_ssd\MasterThesis-2.0'
+base_dir = 'C:\Documents\Thesis_ssd\MasterThesis'
 os.chdir(base_dir)
 
 class LoadData():

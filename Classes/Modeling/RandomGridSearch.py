@@ -22,12 +22,14 @@ import tensorflow as tf
 
 from .Models import Models
 
+
 from Classes.DataProcessing.LoadData import LoadData
 from Classes.DataProcessing.BaselineHelperFunctions import BaselineHelperFunctions
 from Classes.DataProcessing.DataGenerator import DataGenerator
 from Classes.DataProcessing.NoiseAugmentor import NoiseAugmentor
 from Classes.Scaling.MinMaxScalerFitter import MinMaxScalerFitter
 from Classes.Scaling.StandardScalerFitter import StandardScalerFitter
+from .GridSearchResultProcessor import GridSearchResultProcessor
 
 import sys
 import os
@@ -39,7 +41,7 @@ import pprint
 import re
 import json
 
-base_dir = 'C:\Documents\Thesis_ssd\MasterThesis-2.0'
+base_dir = 'C:\Documents\Thesis_ssd\MasterThesis'
 
 """
 Best so far:
@@ -84,7 +86,7 @@ Best so far:
 
 #TODO: Implement highpass filter into this class.
 #TODO: CLEAN UP THIS MESS
-class RandomGridSearch():
+class RandomGridSearch(GridSearchResultProcessor):
     hyper_grid = {
             "batch_size" : [8, 16, 32, 64, 128, 256],
             "epochs" : [50, 65, 70, 75, 80],
@@ -129,92 +131,6 @@ class RandomGridSearch():
         self.highpass_freq = highpass_freq
         self.helper = BaselineHelperFunctions()
         self.data_gen = DataGenerator()
-    
-    def create_results_df(self):
-        hyper_keys = list(self.hyper_grid.keys())
-        model_keys = list(self.model_grid.keys())
-        metrics_train_keys = ["train_loss", "train_accuracy", "train_precision", "train_recall"]
-        metrics_val_keys = ["val_loss", "val_accuracy", "val_precision", "val_recall"]
-        header = np.concatenate((hyper_keys, model_keys, metrics_train_keys, metrics_val_keys))
-        results_df = pd.DataFrame(columns = header)
-        return results_df
-    
-    def save_results_df(self, results_df, file_name):
-        results_df.to_csv(file_name, mode = 'w')
-    
-    def clear_results_df(self, file_name):
-        path = self.get_results_file_path()
-        file = f"{path}/{file_name}"
-        if os.path.isfile(file):
-            f = open(file, "w+")
-            f.close()
-        
-    
-    def get_results_file_name(self):
-        file_name = f"{self.get_results_file_path()}/results_{self.model_nr}"
-        if self.test:
-            file_name = f"{file_name}_test"
-        if self.detrend:
-            file_name = f"{file_name}_detrend"
-        if self.use_scaler:
-            if self.use_minmax:
-                file_name = f"{file_name}_mmscale"
-            else: 
-                file_name = f"{file_name}_sscale"
-        if self.use_noise_augmentor:
-            file_name = f"{file_name}_noiseAug"
-        if self.use_early_stopping:
-            file_name = f"{file_name}_earlyS"
-        if self.use_highpass:
-            file_name = f"{file_name}_highpass{self.highpass_freq}"
-        file_name = file_name + ".csv"
-        return file_name
-    
-    def get_results_file_path(self):
-        file_path = f'C:\Documents/Thesis_ssd/MasterThesis-2.0/GridSearchResults/{self.num_classes}_classes'
-        return file_path
-    
-    def store_params_before_fit(self, current_picks, results_df, file_name):
-        
-        hyper_params = current_picks[1]
-        model_params = current_picks[2]
-        print(model_params)
-        picks = []
-        for key in list(hyper_params.keys()):
-            picks.append(hyper_params[key])
-        for key in list(model_params.keys()):
-            picks.append(model_params[key])
-        nr_fillers = len(results_df.columns) - len(picks)
-        for i in range(nr_fillers):
-            picks.append(np.nan)
-        temp_df = pd.DataFrame(np.array(picks).reshape(1,21), columns = results_df.columns)
-        results_df = results_df.append(temp_df, ignore_index = True)
-        for idx, column in enumerate(results_df.columns):
-            if idx >= 13:
-                results_df[column] = results_df[column].astype('float')
-        self.save_results_df(results_df, file_name)
-        return results_df
-
-
-    def store_metrics_after_fit(self, metrics, results_df, file_name):
-        metrics_train = metrics[1]
-        metrics_val = metrics[0]
-        print(metrics_train, metrics_val)
-        finished_train = False
-        # Get list of columns containing nan values
-        unfinished_columns = results_df.columns[results_df.isnull().any()].tolist()
-        # Iterate through every unfinished column and change values
-        for idx, column in enumerate(unfinished_columns):
-            if not finished_train:
-                # Change value at column using the metrics
-                results_df.iloc[-1, results_df.columns.get_loc(column)] = metrics_train[column]
-                if idx == len(metrics_train)-1:
-                    finished_train = True
-            else:
-                # Change value at column using the metrics
-                results_df.iloc[-1, results_df.columns.get_loc(column)] = metrics_val[column]
-        self.save_results_df(results_df, file_name)
-        return results_df
             
 
     def fit(self):
@@ -370,29 +286,6 @@ class RandomGridSearch():
         return highest_test_accuracy_index, highest_train_accuracy_index, highest_test_precision_index, highest_test_recall_index
        
     
-    def read_results(self):
-        text_file = f'{base_dir}/GridSearchResults/{self.num_classes}_classes/results_{self.model_nr}.txt'
-        dictionaries = []
-        with open(text_file, 'r') as file:
-            for idx, line in enumerate(file):
-                if idx == 0 or idx == 1:
-                    continue
-                line = re.sub("\'", "\"", line.rstrip())
-                if idx + 2 % 5 != 0: 
-                    print(line)
-                    dictionaries.append(json.loads(line))
-            file.close()
-        dictionaries_by_model = []
-        one_model = []
-        for idx, dictionary in enumerate(dictionaries):
-            if idx % 5 != 0 or idx == 0:
-                one_model.append(dictionary)
-            else:
-                dictionaries_by_model.append(one_model)
-                one_model = []
-                one_model.append(dictionary)           
-        return dictionaries_by_model
-    
     def fit_from_result(self, dictionaries, index, train_channels = 3, timesteps = 6001, test = False, use_tensorboard = False):
         
         build_model_args = self.helper.generate_build_model_args(dictionaries[index][0]['model_nr'], dictionaries[index][1]['batch_size'], 
@@ -434,28 +327,7 @@ class RandomGridSearch():
             return tf.keras.optimizers.SGD(learning_rate=learning_rate)
         else:
             raise Exception(f"{optimizer} not implemented into getOptimizer")
-    
-    def save_conditionals(self):
-        with open(f'{base_dir}/GridSearchResults/{self.num_classes}_classes/results_{self.model_nr}.txt', 'a', newline='') as file:
-            file.writelines(f'Test_mode: {self.test}, use_scaler: {self.use_scaler}, use_minmax: {self.use_minmax}, use_noise_augmentor: {self.use_noise_augmentor} detrend: {self.detrend}. \n')
-            file.close()
-    
-    def save_params(self, current_params):
-        with open(f'{base_dir}/GridSearchResults/{self.num_classes}_classes/results_{self.model_nr}.txt', 'a', newline='') as file:
-            file.writelines("-------------------------------------------------------------------------------------------------------------------------------------------\n")
-            for part in current_params:
-                file.writelines(str(part) + '\n')
-            file.close()
-            
-    def save_metrics(self, metrics):
-        with open(f'{base_dir}/GridSearchResults/{self.num_classes}_classes/results_{self.model_nr}.txt', 'a', newline='') as file:
-            for part in metrics:
-                file.writelines(str(part) + '\n')
-            file.close()
-    
-    def delete_progress(self):
-        with open(f'{base_dir}/GridSearchResults/{self.num_classes}_classes/results_{self.model_nr}.txt', 'w+', newline='') as file:
-            file.truncate(0)
+
 
     
     

@@ -236,23 +236,23 @@ class RandomGridSearch(GridSearchResultProcessor):
             current_picks.append(metrics_train)
             self.results_df = self.store_metrics_after_fit(metrics, self.results_df, self.results_file_name)
             
-        min_loss, max_accuracy, max_precision, max_recall = self.find_best_performers(self.results)
+        min_loss, max_accuracy, max_precision, max_recall = self.find_best_performers(self.results_df)
         self.print_best_performers(min_loss, max_accuracy, max_precision, max_recall)
         return self.results_df, min_loss, max_accuracy, max_precision, max_recall
 
     def print_best_performers(self, min_loss, max_accuracy, max_precision, max_recall):
         print("----------------------------------------------------LOSS----------------------------------------------------------")
-        print(f'Min val loss: {min_loss['val_loss']}, at index: {min_loss['val_index']}')
-        print(f'Min training loss: {min_loss['train_loss']}, at index: {min_loss['train_index']}')
+        print(f"Min val loss: {min_loss['val_loss']}, at index: {min_loss['val_index']}")
+        print(f"Min training loss: {min_loss['train_loss']}, at index: {min_loss['train_index']}")
         print("----------------------------------------------------ACCURACY------------------------------------------------------")
-        print(f'Highest val accuracy: {max_accuracy['val_accuracy']}, at index: {max_accuracy['val_index']}')
-        print(f'Highest training accuracy: {max_accuracy['train_accuracy']}, at index: {max_accuracy['train_index']}')
+        print(f"Highest val accuracy: {max_accuracy['val_accuracy']}, at index: {max_accuracy['val_index']}")
+        print(f"Highest training accuracy: {max_accuracy['train_accuracy']}, at index: {max_accuracy['train_index']}")
         print("----------------------------------------------------PRECISION-----------------------------------------------------")
-        print(f'Highest val precision: {max_precision['val_precision']}, at index: {max_precision['val_index']}')
-        print(f'Highest training precision: {max_precision['train_precision']}, at index: {max_precision['train_index']}') 
+        print(f"Highest val precision: {max_precision['val_precision']}, at index: {max_precision['val_index']}")
+        print(f"Highest training precision: {max_precision['train_precision']}, at index: {max_precision['train_index']}") 
         print("-----------------------------------------------------RECALL-------------------------------------------------------")
-        print(f'Highest val recall: {max_recall['val_recall']}, at index: {max_recall['val_index']}')
-        print(f'Highest training recall: {max_recall['train_recall']}, at index: {max_recall['train_index']}')
+        print(f"Highest val recall: {max_recall['val_recall']}, at index: {max_recall['val_index']}")
+        print(f"Highest training recall: {max_recall['train_recall']}, at index: {max_recall['train_index']}")
         print("------------------------------------------------------------------------------------------------------------------")
        
     

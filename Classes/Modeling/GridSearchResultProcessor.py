@@ -65,7 +65,7 @@ class GridSearchResultProcessor():
         if self.use_early_stopping:
             file_name = f"{file_name}_earlyS"
         if self.use_highpass:
-            file_name = f"{file_name}_highpass{self.highpass_freq}"
+            file_name = f"{file_name}_highpass-{self.highpass_freq}"
         file_name = file_name + ".csv"
         return file_name
     

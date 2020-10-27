@@ -157,8 +157,6 @@ class RandomGridSearch(GridSearchResultProcessor):
             current_picks = [model_info, self.hyper_picks[i], self.model_picks[i]]
             # Store picked parameters:
             self.results_df = self.store_params_before_fit(current_picks, self.results_df, self.results_file_name)
-            print("Parameters stored before fit")
-            print(self.results_df)
             
             # Translate picks to a more readable format:
             epoch = self.hyper_picks[i]["epochs"]
@@ -172,7 +170,7 @@ class RandomGridSearch(GridSearchResultProcessor):
             filters = self.model_picks[i]["filters"]
             kernel_size = self.model_picks[i]["kernel_size"]
             padding = self.model_picks[i]["padding"]
-            opt = self.getOptimizer(self.hyper_picks[i]["optimizer"], self.hyper_picks[i]["learning_rate"])
+            opt = self.helper.getOptimizer(self.hyper_picks[i]["optimizer"], self.hyper_picks[i]["learning_rate"])
             
             # Generate build model args using the picks from above.
             build_model_args = self.helper.generate_build_model_args(self.model_nr, batch_size, dropout_rate, 
@@ -256,6 +254,61 @@ class RandomGridSearch(GridSearchResultProcessor):
         print("------------------------------------------------------------------------------------------------------------------")
        
     
+    def fit_from_index(self, results_df, index):
+        values = list(results_df.iloc[index][0:13])
+        keys = list(results_df.columns[0:13])
+        params = {keys[i]: values[i] for i in range(len(keys))}
+
+        build_model_args = self.helper.generate_build_model_args(self.model_nr, int(params['batch_size']), 
+                                                                 float(params['dropout_rate']), params['activation'], 
+                                                                 params['output_layer_activation'], float(params['l2_r']), 
+                                                                 float(params['l1_r']), int(params['start_neurons']),
+                                                                 int(params['filters']), int(params['kernel_size']),
+                                                                 params['padding'], self.num_classes)
+        # Build model using args generated above
+        model = Models(**build_model_args).model
+
+        # Generate generator args using picks.
+        gen_args = self.helper.generate_gen_args(int(params['batch_size']), False, self.detrend, 
+                                                 use_scaler = self.use_scaler, scaler = self.scaler, 
+                                                 use_noise_augmentor = self.use_noise_augmentor, 
+                                                 augmentor = self.augmentor, num_classes = self.num_classes)
+
+        # Initiate generators using the args
+        train_gen = self.data_gen.data_generator(self.train_ds, **gen_args)
+        val_gen = self.data_gen.data_generator(self.val_ds, **gen_args)
+        test_gen = self.data_gen.data_generator(self.test_ds, **gen_args)
+
+        # Generate compiler args using picks
+        opt = self.helper.getOptimizer(params['optimizer'], float(params['learning_rate']))
+        model_compile_args = self.helper.generate_model_compile_args(opt, self.num_classes)
+        # Compile model using generated args
+        model.compile(**model_compile_args)
+
+        # Generate fit args using picks.
+        fit_args = self.helper.generate_fit_args(self.train_ds, self.val_ds, int(params['batch_size']), False, 
+                                                 int(params['epochs']), test_gen, use_tensorboard = self.use_tensorboard, 
+                                                 use_liveplots = True, 
+                                                 use_custom_callback = self.use_custom_callback,
+                                                 use_early_stopping = self.use_early_stopping)
+        # Fit the model using the generated args
+        model_fit = model.fit(train_gen, **fit_args)
+        
+        helper.plot_confusion_matrix(model, test_gen, self.test_ds, int(params['batch_size']), self.num_classes)
+
+        # Evaluate the fitted model on the test set
+        loss, accuracy, precision, recall = model.evaluate_generator(generator=test_gen,
+                                                                   steps=self.helper.get_steps_per_epoch(self.test_ds, 
+                                                                                                         int(params['batch_size']), 
+                                                                                                         False))
+
+        pp = pprint.PrettyPrinter(indent=4)
+        print(f'Test loss: {loss}')
+        print(f'Test accuracy: {accuracy}')
+        print(f'Test precision: {precision}')
+        print(f'Test recall: {recall}')
+        return model
+    
     
     def get_n_params_from_list(self, grid_list, n_picks):
         picks = []
@@ -267,15 +320,7 @@ class RandomGridSearch(GridSearchResultProcessor):
             n_picks -= 1
         return picks
 
-    def getOptimizer(self, optimizer, learning_rate):
-        if optimizer == "adam":
-            return keras.optimizers.Adam(learning_rate=learning_rate)
-        if optimizer == "rmsprop":
-            return tf.keras.optimizers.RMSprop(learning_rate=learning_rate)
-        if optimizer == "sgd":
-            return tf.keras.optimizers.SGD(learning_rate=learning_rate)
-        else:
-            raise Exception(f"{optimizer} not implemented into getOptimizer")
+
 
 
     

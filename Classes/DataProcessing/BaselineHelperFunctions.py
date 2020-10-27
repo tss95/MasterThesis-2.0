@@ -188,6 +188,17 @@ class BaselineHelperFunctions():
                         "callbacks" : callbacks
                        }
     
+    def getOptimizer(self, optimizer, learning_rate):
+        if optimizer == "adam":
+            return keras.optimizers.Adam(learning_rate=learning_rate)
+        if optimizer == "rmsprop":
+            return tf.keras.optimizers.RMSprop(learning_rate=learning_rate)
+        if optimizer == "sgd":
+            return tf.keras.optimizers.SGD(learning_rate=learning_rate)
+        else:
+            raise Exception(f"{optimizer} not implemented into getOptimizer")    
+    
+    # Possibly depriciated
     def get_n_points_with_highest_training_loss(self, train_ds, n, full_logs):
         train_ds_dict = {}
         for path, label in train_ds:

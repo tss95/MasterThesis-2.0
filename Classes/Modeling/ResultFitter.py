@@ -1,6 +1,7 @@
 from Classes.DataProcessing.LoadData import LoadData
 from Classes.DataProcessing.BaselineHelperFunctions import BaselineHelperFunctions
 from .GridSearchResultProcessor import GridSearchResultProcessor
+from .Models import Models
 import os
 import sys
 import numpy as np
@@ -14,9 +15,9 @@ class ResultFitter(GridSearchResultProcessor):
     def __init__(self, num_classes, is_balanced = True, shuffle = False):
         super().__init__()
         self.full_ds, self.train_ds, self.val_ds, self.test_ds = LoadData(num_classes = num_classes, 
-                                                                          isBalanced = is_balanced, 
-                                                                          shuffle = shuffle).getDatasets(shuffle = shuffle)
+                                                                          isBalanced = is_balanced).getDatasets(shuffle = shuffle)
         self.helper = BaselineHelperFunctions()
+    
     
 
     def fit_from_csv_and_index(self, file_name, index, num_classes, use_tensorboard = False, 
@@ -24,7 +25,8 @@ class ResultFitter(GridSearchResultProcessor):
 
         # Major parameter parser
         df = GridSearchResultProcessor().get_results_df_by_name(file_name, num_classes)
-        model_nr, detrend, use_scaler, use_minmax, use_noise_augmentor, use_early_stopping, use_highpass, highpass_freq = parse_result_name(file_name)
+        model_nr, detrend, use_scaler, use_minmax, use_noise_augmentor, use_early_stopping, use_highpass, highpass_freq = self.parse_result_name(file_name)
+        print(f"model number: {model_nr}")
 
         if use_scaler:
             if use_minmax:
@@ -37,7 +39,7 @@ class ResultFitter(GridSearchResultProcessor):
             augmentor = NoiseAugmentor(self.train_ds, use_scaler, scaler)
         else:
             augmentor = None
-
+        
         values = list(df.iloc[index][0:13])
         keys = list(df.columns[0:13])
         params = {keys[i]: values[i] for i in range(len(keys))}
@@ -48,6 +50,7 @@ class ResultFitter(GridSearchResultProcessor):
                                                                  float(params['l1_r']), int(params['start_neurons']),
                                                                  int(params['filters']), int(params['kernel_size']),
                                                                  params['padding'], num_classes)
+        print(build_model_args)
         # Build model using args generated above
         model = Models(**build_model_args).model
 

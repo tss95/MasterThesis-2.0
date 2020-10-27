@@ -1,6 +1,7 @@
 from Classes.DataProcessing.LoadData import LoadData
 from Classes.DataProcessing.BaselineHelperFunctions import BaselineHelperFunctions
 from .GridSearchResultProcessor import GridSearchResultProcessor
+from Classes.DataProcessing.DataGenerator import DataGenerator
 from .Models import Models
 import os
 import sys
@@ -14,17 +15,18 @@ class ResultFitter(GridSearchResultProcessor):
     
     def __init__(self, num_classes, is_balanced = True, shuffle = False):
         super().__init__()
+        self.num_classes = num_classes
         self.full_ds, self.train_ds, self.val_ds, self.test_ds = LoadData(num_classes = num_classes, 
                                                                           isBalanced = is_balanced).getDatasets(shuffle = shuffle)
         self.helper = BaselineHelperFunctions()
     
     
 
-    def fit_from_csv_and_index(self, file_name, index, num_classes, use_tensorboard = False, 
-                               use_liveplots = False, use_custom_callbacks = False):
+    def fit_from_csv_and_index(self, file_name, index, epochs, use_tensorboard = False, 
+                               use_liveplots = False, use_custom_callback = False):
 
         # Major parameter parser
-        df = GridSearchResultProcessor().get_results_df_by_name(file_name, num_classes)
+        df = GridSearchResultProcessor().get_results_df_by_name(file_name, self.num_classes)
         model_nr, detrend, use_scaler, use_minmax, use_noise_augmentor, use_early_stopping, use_highpass, highpass_freq = self.parse_result_name(file_name)
         print(f"model number: {model_nr}")
 
@@ -49,31 +51,32 @@ class ResultFitter(GridSearchResultProcessor):
                                                                  params['output_layer_activation'], float(params['l2_r']), 
                                                                  float(params['l1_r']), int(params['start_neurons']),
                                                                  int(params['filters']), int(params['kernel_size']),
-                                                                 params['padding'], num_classes)
+                                                                 params['padding'], self.num_classes)
         print(build_model_args)
         # Build model using args generated above
         model = Models(**build_model_args).model
 
         # Generate generator args using picks.
-        gen_args = self.helper.generate_gen_args(int(params['batch_size']), False, self.detrend, 
+        gen_args = self.helper.generate_gen_args(int(params['batch_size']), False, detrend, 
                                                  use_scaler = use_scaler, scaler = scaler, 
                                                  use_noise_augmentor = use_noise_augmentor, 
-                                                 augmentor = augmentor, num_classes = num_classes)
+                                                 augmentor = augmentor, num_classes = self.num_classes)
 
         # Initiate generators using the args
-        train_gen = self.data_gen.data_generator(self.train_ds, **gen_args)
-        val_gen = self.data_gen.data_generator(self.val_ds, **gen_args)
-        test_gen = self.data_gen.data_generator(self.test_ds, **gen_args)
+        data_gen = DataGenerator()
+        train_gen = data_gen.data_generator(self.train_ds, **gen_args)
+        val_gen = data_gen.data_generator(self.val_ds, **gen_args)
+        test_gen = data_gen.data_generator(self.test_ds, **gen_args)
 
         # Generate compiler args using picks
-        opt = self.getOptimizer(params['optimizer'], float(params['learning_rate']))
+        opt = self.helper.getOptimizer(params['optimizer'], float(params['learning_rate']))
         model_compile_args = self.helper.generate_model_compile_args(opt, num_classes)
         # Compile model using generated args
         model.compile(**model_compile_args)
 
         # Generate fit args using picks.
         fit_args = self.helper.generate_fit_args(self.train_ds, self.val_ds, int(params['batch_size']), False, 
-                                                 int(params['epochs']), test_gen, use_tensorboard = use_tensorboard, 
+                                                 epochs, test_gen, use_tensorboard = use_tensorboard, 
                                                  use_liveplots = use_liveplots, 
                                                  use_custom_callback = use_custom_callback,
                                                  use_early_stopping = use_early_stopping)
@@ -87,8 +90,6 @@ class ResultFitter(GridSearchResultProcessor):
                                                                    steps=self.helper.get_steps_per_epoch(self.test_ds, 
                                                                                                          int(params['batch_size']), 
                                                                                                          False))
-
-        pp = pprint.PrettyPrinter(indent=4)
         print(f'Test loss: {loss}')
         print(f'Test accuracy: {accuracy}')
         print(f'Test precision: {precision}')
@@ -101,7 +102,7 @@ class ResultFitter(GridSearchResultProcessor):
     def parse_result_name(self, file_name):
         file_name = os.path.splitext(file_name)[0]
         major_params = file_name.split('_')[1:]
-        model_nr = major_params[0]
+        model_nr = int(major_params[0])
         del major_params[0]
 
         use_scaler = 'sscale' in major_params

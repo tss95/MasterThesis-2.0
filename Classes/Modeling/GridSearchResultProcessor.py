@@ -3,6 +3,8 @@ import os
 import sys
 import numpy as np
 import pandas as pd
+from os import listdir
+from os.path import isfile, join
 
 class GridSearchResultProcessor():
 
@@ -18,8 +20,26 @@ class GridSearchResultProcessor():
         results_df = pd.DataFrame(columns = header)
         return results_df
     
+    def initiate_results_df(self, file_name, num_classes, start_from_scratch):
+        if start_from_scratch:
+            self.clear_results_df(file_name)
+            return self.create_results_df()
+        else:
+            if self.does_result_exist(file_name):
+                file_name = file_name.split('/')[-1]
+                results_df = self.get_results_df_by_name(file_name, num_classes)
+                return results_df
+            else:
+                return self.create_results_df()
+
+        
+    def does_result_exist(self, file_name):
+        return isfile(file_name)
+        
+        
+    
     def save_results_df(self, results_df, file_name):
-        results_df.to_csv(file_name, mode = 'w')
+        results_df.to_csv(file_name, mode = 'w', index=False)
     
     def clear_results_df(self, file_name):
         path = self.get_results_file_path()
@@ -57,7 +77,6 @@ class GridSearchResultProcessor():
         
         hyper_params = current_picks[1]
         model_params = current_picks[2]
-        print(model_params)
         picks = []
         for key in list(hyper_params.keys()):
             picks.append(hyper_params[key])
@@ -66,7 +85,7 @@ class GridSearchResultProcessor():
         nr_fillers = len(results_df.columns) - len(picks)
         for i in range(nr_fillers):
             picks.append(np.nan)
-        temp_df = pd.DataFrame(np.array(picks).reshape(1,21), columns = results_df.columns)
+        temp_df = pd.DataFrame(np.array(picks).reshape(1,len(results_df.columns)), columns = results_df.columns)
         results_df = results_df.append(temp_df, ignore_index = True)
         for idx, column in enumerate(results_df.columns):
             if idx >= 13:
@@ -116,9 +135,8 @@ class GridSearchResultProcessor():
 
         return min_loss, max_accuracy, max_precision, max_recall
     
-    def get_result_df_by_name(self, file_name, num_classes):
+    def get_results_df_by_name(self, file_name, num_classes):
         file_path = f"C:\Documents/Thesis_ssd/MasterThesis/GridSearchResults/{num_classes}_classes"
         loaded_df = pd.read_csv(file_path+'/'+file_name)
         return loaded_df
-            
     

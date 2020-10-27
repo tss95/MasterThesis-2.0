@@ -84,8 +84,6 @@ Best so far:
   'train_recall': 0.87465983629226685}
   """
 
-#TODO: Implement highpass filter into this class.
-#TODO: CLEAN UP THIS MESS
 class RandomGridSearch(GridSearchResultProcessor):
     hyper_grid = {
             "batch_size" : [8, 16, 32, 64, 128, 256],
@@ -109,7 +107,7 @@ class RandomGridSearch(GridSearchResultProcessor):
     def __init__(self, train_ds, val_ds, test_ds, model_nr, test, detrend, use_scaler, use_noise_augmentor,
                  use_minmax, use_highpass, n_picks, hyper_grid=hyper_grid, model_grid=model_grid, num_classes = 3, 
                  use_tensorboard = False, use_liveplots = True, use_custom_callback = False, use_early_stopping = False,
-                 highpass_freq = 0.1):
+                 highpass_freq = 0.1, start_from_scratch = True):
         self.train_ds = train_ds
         self.val_ds = val_ds
         self.test_ds = test_ds
@@ -129,6 +127,7 @@ class RandomGridSearch(GridSearchResultProcessor):
         self.use_custom_callback = use_custom_callback
         self.use_early_stopping = use_early_stopping
         self.highpass_freq = highpass_freq
+        self.start_from_scratch = start_from_scratch
         self.helper = BaselineHelperFunctions()
         self.data_gen = DataGenerator()
             
@@ -146,10 +145,9 @@ class RandomGridSearch(GridSearchResultProcessor):
         else:
             self.augmentor = None
         
-        # Create name of results file, clear contents if one exists, create df to work with.
+        # Create name of results file, get initiated results df, either brand new or continue old.
         self.results_file_name = self.get_results_file_name()
-        self.clear_results_df(self.results_file_name)
-        self.results_df = self.create_results_df()
+        self.results_df = self.initiate_results_df(self.results_file_name, self.num_classes, self.start_from_scratch)
         
         self.hyper_picks = self.get_n_params_from_list(list(ParameterGrid(self.hyper_grid)), self.n_picks)
         self.model_picks = self.get_n_params_from_list(list(ParameterGrid(self.model_grid)), self.n_picks)
@@ -159,6 +157,8 @@ class RandomGridSearch(GridSearchResultProcessor):
             current_picks = [model_info, self.hyper_picks[i], self.model_picks[i]]
             # Store picked parameters:
             self.results_df = self.store_params_before_fit(current_picks, self.results_df, self.results_file_name)
+            print("Parameters stored before fit")
+            print(self.results_df)
             
             # Translate picks to a more readable format:
             epoch = self.hyper_picks[i]["epochs"]
@@ -256,27 +256,6 @@ class RandomGridSearch(GridSearchResultProcessor):
         print("------------------------------------------------------------------------------------------------------------------")
        
     
-    def fit_from_result(self, dictionaries, index, train_channels = 3, timesteps = 6001, test = False, use_tensorboard = False):
-        
-        build_model_args = self.helper.generate_build_model_args(dictionaries[index][0]['model_nr'], dictionaries[index][1]['batch_size'], 
-                                                     dictionaries[index][2]['dropout_rate'], dictionaries[index][2]['activation'], 
-                                                     dictionaries[index][2]['l2_r'], dictionaries[index][2]['l1_r'],
-                                                     dictionaries[index][2]['start_neurons'], dictionaries[index][2]['filters'],
-                                                     dictionaries[index][2]['kernel_size'], dictionaries[index][2]['padding'])
-        model = Models(**build_model_args).model
-
-        model_compile_args = self.helper.generate_model_compile_args(dictionaries[index][1]['optimizer'])
-        model.compile(**model_compile_args)
-       
-        gen_args = self.helper.generate_gen_args(dictionaries[index][1]['batch_size'], False, self.detrend, self.num_classes)
-        
-        train_gen = self.data_gen.data_generator(self.train_ds, **gen_args)
-        val_gen = self.data_gen.data_generator(self.val_ds, **gen_args)
-        test_gen = self.data_gen.data_generator(self.test_ds, **gen_args)
-
-        fit_args = self.helper.generate_fit_args(self.train_ds, self.val_ds, dictionaries[index][1]['batch_size'], False, dictionaries[index][1]['epochs'], val_gen, use_tensorboard)
-        model.fit(train_gen, **fit_args)
-        return model
     
     def get_n_params_from_list(self, grid_list, n_picks):
         picks = []

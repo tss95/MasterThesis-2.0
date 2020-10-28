@@ -198,7 +198,6 @@ class BaselineHelperFunctions():
         else:
             raise Exception(f"{optimizer} not implemented into getOptimizer")    
     
-    # Possibly depriciated
     def get_n_points_with_highest_training_loss(self, train_ds, n, full_logs):
         train_ds_dict = {}
         for path, label in train_ds:

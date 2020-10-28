@@ -43,47 +43,6 @@ import json
 
 base_dir = 'C:\Documents\Thesis_ssd\MasterThesis'
 
-"""
-Best so far:
-{'batch_size': 16, 'epochs': 95, 'learning_rate': 0.1, 'optimizer': 'adam'},
- {'activation': 'tanh',
-  'dropout_rate': 0.5,
-  'l1_r': 0.1,
-  'l2_r': 0.0001,
-  'start_neurons': 128},
- {'loss': 358.6396789550781,
-  'accuracy': 0.51602566242218018,
-  'mse': 0.21034729480743408,
-  'precision': 0.33800473809242249,
-  'recall': 0.22719238698482513},
- {'train_loss': 358.9141845703125,
-  'train_accuracy': 0.37990197539329529,
-  'train_mse': 0.23922176659107208,
-  'train_precision': 0.33883824944496155,
-  'train_recall': 0.22711670398712158}
-  
-  Best training results:
-  {'batch_size': 128,
-  'epochs': 100,
-  'learning_rate': 0.0001,
-  'optimizer': 'rmsprop'},
- {'activation': 'tanh',
-  'dropout_rate': 0.2,
-  'l1_r': 0.2,
-  'l2_r': 0.001,
-  'start_neurons': 512},
- {'loss': 7.242753028869629,
-  'accuracy': 0.3671875,
-  'mse': 0.31585189700126648,
-  'precision': 0.91042166948318481,
-  'recall': 0.87738406658172607},
- {'train_loss': 4.252453804016113,
-  'train_accuracy': 1.0,
-  'train_mse': 0.00082400580868124962,
-  'train_precision': 0.90749055147171021,
-  'train_recall': 0.87465983629226685}
-  """
-
 class RandomGridSearch(GridSearchResultProcessor):
     hyper_grid = {
             "batch_size" : [8, 16, 32, 64, 128, 256],

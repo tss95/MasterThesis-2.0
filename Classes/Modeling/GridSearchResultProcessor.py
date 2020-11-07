@@ -97,7 +97,6 @@ class GridSearchResultProcessor():
     def store_metrics_after_fit(self, metrics, results_df, file_name):
         metrics_train = metrics[1]
         metrics_val = metrics[0]
-        print(metrics_train, metrics_val)
         finished_train = False
         # Get list of columns containing nan values
         unfinished_columns = results_df.columns[results_df.isnull().any()].tolist()
